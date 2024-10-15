@@ -17,10 +17,10 @@ layout: default
   </form>
 </div>
 
-<!-- Firebase CDN (instead of import statements) -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js"></script>
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
 
 <script>
   // Your web app's Firebase configuration
@@ -35,9 +35,9 @@ layout: default
   };
 
   // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const analytics = firebase.analytics();
+  firebase.analytics();
 
   // Function to add a new post to Firestore
   async function addPost(title, content) {
@@ -48,7 +48,7 @@ layout: default
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Post added successfully!');
-      displayPosts(); // Refresh the post display after adding a post
+      displayPosts(); // Refresh the posts display after adding a new post
     } catch (error) {
       console.error('Error adding post: ', error);
     }
@@ -57,7 +57,7 @@ layout: default
   // Function to display posts from Firestore
   async function displayPosts() {
     const postContainer = document.getElementById('posts');
-    postContainer.innerHTML = ''; // Clear the post container
+    postContainer.innerHTML = ''; // Clear the container before appending new posts
     try {
       const querySnapshot = await db.collection('posts').orderBy('timestamp', 'desc').get();
       querySnapshot.forEach((doc) => {
@@ -73,7 +73,7 @@ layout: default
     }
   }
 
-  // Add post form submission
+  // Form submission handling
   document.getElementById('postForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('title').value;
