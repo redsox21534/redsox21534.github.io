@@ -2,17 +2,89 @@
 layout: default
 ---
 
-<div class="posts">
-  {% for post in site.posts %}
-    <article class="post">
-
-      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
-
-      <div class="entry">
-        {{ post.excerpt }}
-      </div>
-
-      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a>
-    </article>
-  {% endfor %}
+<!-- Display the posts from Firebase -->
+<div class="posts" id="posts">
+  <!-- Posts will be dynamically loaded here -->
 </div>
+
+<!-- Add a form for users to submit new posts -->
+<div class="post-form">
+  <h2>Add a New Post</h2>
+  <form id="postForm">
+    <input type="text" id="title" placeholder="Post Title" required />
+    <textarea id="content" placeholder="Post Content" required></textarea>
+    <button type="submit">Submit Post</button>
+  </form>
+</div>
+
+<!-- Firebase CDN (instead of import statements) -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdvPz4MqhcaR5AxqflgIy7EE4jRvzNn5E",
+    authDomain: "perceptos-website.firebaseapp.com",
+    projectId: "perceptos-website",
+    storageBucket: "perceptos-website.appspot.com",
+    messagingSenderId: "348493325500",
+    appId: "1:348493325500:web:77089e867aa9f256d3dcb9",
+    measurementId: "G-88LHK6VWD7"
+  };
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const analytics = firebase.analytics();
+
+  // Function to add a new post to Firestore
+  async function addPost(title, content) {
+    try {
+      await db.collection('posts').add({
+        title: title,
+        content: content,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Post added successfully!');
+      displayPosts(); // Refresh the post display after adding a post
+    } catch (error) {
+      console.error('Error adding post: ', error);
+    }
+  }
+
+  // Function to display posts from Firestore
+  async function displayPosts() {
+    const postContainer = document.getElementById('posts');
+    postContainer.innerHTML = ''; // Clear the post container
+    try {
+      const querySnapshot = await db.collection('posts').orderBy('timestamp', 'desc').get();
+      querySnapshot.forEach((doc) => {
+        const post = doc.data();
+        postContainer.innerHTML += `
+          <div class="post">
+            <h2>${post.title}</h2>
+            <p>${post.content}</p>
+          </div>`;
+      });
+    } catch (error) {
+      console.error('Error fetching posts: ', error);
+    }
+  }
+
+  // Add post form submission
+  document.getElementById('postForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+    await addPost(title, content);
+
+    // Clear form fields
+    document.getElementById('title').value = '';
+    document.getElementById('content').value = '';
+  });
+
+  // Display posts on page load
+  displayPosts();
+</script>
