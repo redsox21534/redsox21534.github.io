@@ -80,6 +80,20 @@ layout: default
     }
   }
 
+  // Function to add a comment to a post
+  async function addComment(postId, content) {
+    try {
+      await db.collection('posts').doc(postId).collection('comments').add({
+        content: content,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Comment added successfully!');
+      displayPosts(); // Refresh posts after adding
+    } catch (error) {
+      console.error('Error adding comment: ', error);
+    }
+  }
+
   // Function to display posts from Firestore
   async function displayPosts() {
     const socialPosts = document.getElementById('socialPosts');
@@ -93,9 +107,20 @@ layout: default
 
     try {
       const querySnapshot = await db.collection('posts').orderBy('timestamp', 'desc').get();
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach(async (doc) => {
         const post = doc.data();
-        const postHTML = `<div class="post"><h2>${post.title}</h2><p>${post.content}</p></div>`;
+        const postId = doc.id;
+        const postHTML = `
+          <div class="post">
+            <h2>${post.title}</h2>
+            <p>${post.content}</p>
+            <a href="#" class="toggle-comments" data-id="${postId}">...</a>
+            <div class="comments-section" id="comments-${postId}" style="display: none;"></div>
+            <form class="add-comment-form" data-id="${postId}">
+              <textarea placeholder="Add a comment"></textarea>
+              <button type="submit">Submit</button>
+            </form>
+          </div>`;
 
         if (post.category === 'social-cultural') {
           socialPosts.innerHTML += postHTML;
@@ -104,9 +129,28 @@ layout: default
         } else if (post.category === 'foreign-affairs') {
           foreignPosts.innerHTML += postHTML;
         }
+
+        // Fetch and display comments for this post
+        await displayComments(postId);
       });
     } catch (error) {
       console.error('Error fetching posts: ', error);
+    }
+  }
+
+  // Function to display comments for a post
+  async function displayComments(postId) {
+    const commentsSection = document.getElementById(`comments-${postId}`);
+    commentsSection.innerHTML = ''; // Clear existing comments
+
+    try {
+      const commentsSnapshot = await db.collection('posts').doc(postId).collection('comments').orderBy('timestamp', 'desc').get();
+      commentsSnapshot.forEach((commentDoc) => {
+        const comment = commentDoc.data();
+        commentsSection.innerHTML += `<div class="comment">${comment.content}</div>`;
+      });
+    } catch (error) {
+      console.error('Error fetching comments: ', error);
     }
   }
 
@@ -123,7 +167,17 @@ layout: default
     });
   });
 
-  // Form submission handling
+  // Handle comment visibility toggle
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('toggle-comments')) {
+      e.preventDefault();
+      const postId = e.target.getAttribute('data-id');
+      const commentsSection = document.getElementById(`comments-${postId}`);
+      commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+    }
+  });
+
+  // Handle form submission for new posts
   document.getElementById('postForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('title').value;
@@ -134,6 +188,19 @@ layout: default
     // Clear form fields
     document.getElementById('title').value = '';
     document.getElementById('content').value = '';
+  });
+
+  // Handle form submission for new comments
+  document.addEventListener('submit', async (e) => {
+    if (e.target.classList.contains('add-comment-form')) {
+      e.preventDefault();
+      const postId = e.target.getAttribute('data-id');
+      const commentContent = e.target.querySelector('textarea').value;
+      await addComment(postId, commentContent);
+
+      // Clear comment field
+      e.target.querySelector('textarea').value = '';
+    }
   });
 
   // Display posts on page load
