@@ -4,9 +4,9 @@ layout: default
 
 <!-- Tabs for Section Navigation -->
 <ul class="tabs">
-  <li><a href="#social-cultural">Social/Cultural</a></li>
-  <li><a href="#domestic">Domestic Affairs</a></li>
-  <li><a href="#foreign-affairs">Foreign Affairs</a></li>
+  <li><a href="#" data-tab="social-cultural">Social/Cultural</a></li>
+  <li><a href="#" data-tab="domestic">Domestic Affairs</a></li>
+  <li><a href="#" data-tab="foreign-affairs">Foreign Affairs</a></li>
 </ul>
 
 <!-- Social/Cultural Section -->
@@ -16,13 +16,13 @@ layout: default
 </div>
 
 <!-- Domestic Affairs Section -->
-<div id="domestic" class="tab-content">
+<div id="domestic" class="tab-content" style="display: none;">
   <h2>Domestic Affairs</h2>
   <div id="domesticPosts"></div>
 </div>
 
 <!-- Foreign Affairs Section -->
-<div id="foreign-affairs" class="tab-content">
+<div id="foreign-affairs" class="tab-content" style="display: none;">
   <h2>Foreign Affairs</h2>
   <div id="foreignPosts"></div>
 </div>
@@ -110,6 +110,19 @@ layout: default
     }
   }
 
+  // Function to handle tab switching
+  document.querySelectorAll('.tabs a').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const selectedTab = e.target.getAttribute('data-tab');
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+      // Show the selected tab's content
+      document.getElementById(selectedTab).style.display = 'block';
+    });
+  });
+
   // Form submission handling
   document.getElementById('postForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -126,3 +139,4 @@ layout: default
   // Display posts on page load
   displayPosts();
 </script>
+
