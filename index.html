@@ -2,9 +2,29 @@
 layout: default
 ---
 
-<!-- Display the posts from Firebase -->
-<div class="posts" id="posts">
-  <!-- Posts will be dynamically loaded here -->
+<!-- Tabs for Section Navigation -->
+<ul class="tabs">
+  <li><a href="#social-cultural">Social/Cultural</a></li>
+  <li><a href="#domestic">Domestic Affairs</a></li>
+  <li><a href="#foreign-affairs">Foreign Affairs</a></li>
+</ul>
+
+<!-- Social/Cultural Section -->
+<div id="social-cultural" class="tab-content">
+  <h2>Social/Cultural</h2>
+  <div id="socialPosts"></div>
+</div>
+
+<!-- Domestic Affairs Section -->
+<div id="domestic" class="tab-content">
+  <h2>Domestic Affairs</h2>
+  <div id="domesticPosts"></div>
+</div>
+
+<!-- Foreign Affairs Section -->
+<div id="foreign-affairs" class="tab-content">
+  <h2>Foreign Affairs</h2>
+  <div id="foreignPosts"></div>
 </div>
 
 <!-- Add a form for users to submit new posts -->
@@ -13,6 +33,11 @@ layout: default
   <form id="postForm">
     <input type="text" id="title" placeholder="Post Title" required />
     <textarea id="content" placeholder="Post Content" required></textarea>
+    <select id="category">
+      <option value="social-cultural">Social/Cultural</option>
+      <option value="domestic">Domestic Affairs</option>
+      <option value="foreign-affairs">Foreign Affairs</option>
+    </select>
     <button type="submit">Submit Post</button>
   </form>
 </div>
@@ -40,15 +65,16 @@ layout: default
   firebase.analytics();
 
   // Function to add a new post to Firestore
-  async function addPost(title, content) {
+  async function addPost(title, content, category) {
     try {
       await db.collection('posts').add({
         title: title,
         content: content,
+        category: category, // Save the category with the post
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Post added successfully!');
-      displayPosts(); // Refresh the posts display after adding a new post
+      displayPosts(); // Refresh posts after adding
     } catch (error) {
       console.error('Error adding post: ', error);
     }
@@ -56,17 +82,28 @@ layout: default
 
   // Function to display posts from Firestore
   async function displayPosts() {
-    const postContainer = document.getElementById('posts');
-    postContainer.innerHTML = ''; // Clear the container before appending new posts
+    const socialPosts = document.getElementById('socialPosts');
+    const domesticPosts = document.getElementById('domesticPosts');
+    const foreignPosts = document.getElementById('foreignPosts');
+
+    // Clear containers before appending new posts
+    socialPosts.innerHTML = '';
+    domesticPosts.innerHTML = '';
+    foreignPosts.innerHTML = '';
+
     try {
       const querySnapshot = await db.collection('posts').orderBy('timestamp', 'desc').get();
       querySnapshot.forEach((doc) => {
         const post = doc.data();
-        postContainer.innerHTML += `
-          <div class="post">
-            <h2>${post.title}</h2>
-            <p>${post.content}</p>
-          </div>`;
+        const postHTML = `<div class="post"><h2>${post.title}</h2><p>${post.content}</p></div>`;
+
+        if (post.category === 'social-cultural') {
+          socialPosts.innerHTML += postHTML;
+        } else if (post.category === 'domestic') {
+          domesticPosts.innerHTML += postHTML;
+        } else if (post.category === 'foreign-affairs') {
+          foreignPosts.innerHTML += postHTML;
+        }
       });
     } catch (error) {
       console.error('Error fetching posts: ', error);
@@ -78,7 +115,8 @@ layout: default
     e.preventDefault();
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
-    await addPost(title, content);
+    const category = document.getElementById('category').value; // Get category
+    await addPost(title, content, category);
 
     // Clear form fields
     document.getElementById('title').value = '';
