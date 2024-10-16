@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-Normal is not the same everywhere, let use the intersection of our perspectives to find an idea only found in the cross-section. 
+Normal is not the same everywhere, let's use the intersection of perspectives to find the ideas only found in the cross-sections. 
 
 ### More Information
 
